@@ -23,13 +23,13 @@ public class PhotoEntry {
     private List<SingleStringElement> category = new ArrayList<>();
     @SerializedName("gphoto$license")
     @Expose
-    private Gphoto$license gphoto$license;
+    private GphotoLicense gphotoLicense;
     @SerializedName("title")
     @Expose
     private SingleStringElement title;
     @SerializedName("gphoto$shapes")
     @Expose
-    private Gphoto$shapes gphoto$shapes;
+    private GphotoShapes gphotoShapes;
     @SerializedName("content")
     @Expose
     private Content content;
@@ -74,7 +74,7 @@ public class PhotoEntry {
     private SingleStringElement published;
     @SerializedName("georss$where")
     @Expose
-    private Georss$where georss$where;
+    private GeorssWhere georssWhere;
 
     @SerializedName("gphoto$id")
     @Expose
@@ -186,12 +186,12 @@ public class PhotoEntry {
         this.category = category;
     }
 
-    public Gphoto$license getGphoto$license() {
-        return gphoto$license;
+    public GphotoLicense getGphotoLicense() {
+        return gphotoLicense;
     }
 
-    public void setGphoto$license(Gphoto$license gphoto$license) {
-        this.gphoto$license = gphoto$license;
+    public void setGphotoLicense(GphotoLicense gphotoLicense) {
+        this.gphotoLicense = gphotoLicense;
     }
 
     public String getTitle() {
@@ -202,12 +202,12 @@ public class PhotoEntry {
         this.title.setBody(title);
     }
 
-    public Gphoto$shapes getGphoto$shapes() {
-        return gphoto$shapes;
+    public GphotoShapes getGphotoShapes() {
+        return gphotoShapes;
     }
 
-    public void setGphoto$shapes(Gphoto$shapes gphoto$shapes) {
-        this.gphoto$shapes = gphoto$shapes;
+    public void setGphotoShapes(GphotoShapes gphotoShapes) {
+        this.gphotoShapes = gphotoShapes;
     }
 
     public Content getContent() {
@@ -330,13 +330,13 @@ public class PhotoEntry {
     }
 
 
-    public Georss$where getGeorss$where() {
-        return georss$where;
+    public GeorssWhere getGeorssWhere() {
+        return georssWhere;
     }
 
 
-    public void setGeorss$where(Georss$where georss$where) {
-        this.georss$where = georss$where;
+    public void setGeorssWhere(GeorssWhere georssWhere) {
+        this.georssWhere = georssWhere;
     }
 
 }

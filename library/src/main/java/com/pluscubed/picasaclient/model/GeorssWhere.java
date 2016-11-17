@@ -5,7 +5,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 
-public class Georss$where {
+public class GeorssWhere {
 
     @SerializedName("gml$Point")
     @Expose

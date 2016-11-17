@@ -5,7 +5,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 
-public class Gphoto$license {
+public class GphotoLicense {
 
     @SerializedName("url")
     @Expose

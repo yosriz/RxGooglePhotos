@@ -14,16 +14,16 @@ public class MediaGroup {
     private List<SingleStringElement> media$credit = new ArrayList<>();
     @SerializedName("media$title")
     @Expose
-    private Media$title media$title;
+    private MediaTitle mediaTitle;
     @SerializedName("media$thumbnail")
     @Expose
-    private List<Media$thumbnail> media$thumbnail = new ArrayList<>();
+    private List<MediaThumbnail> mediaThumbnail = new ArrayList<>();
     @SerializedName("media$keywords")
     @Expose
     private Media$keywords media$keywords;
     @SerializedName("media$description")
     @Expose
-    private Media$description media$description;
+    private MediaDescription mediaDescription;
 
     @SerializedName("media$content")
     @Expose
@@ -47,13 +47,13 @@ public class MediaGroup {
     }
 
 
-    public Media$title getMedia$title() {
-        return media$title;
+    public MediaTitle getMediaTitle() {
+        return mediaTitle;
     }
 
 
-    public void setMedia$title(Media$title media$title) {
-        this.media$title = media$title;
+    public void setMediaTitle(MediaTitle mediaTitle) {
+        this.mediaTitle = mediaTitle;
     }
 
 
@@ -62,13 +62,13 @@ public class MediaGroup {
     }
 
 
-    public List<Media$thumbnail> getMedia$thumbnail() {
-        return media$thumbnail;
+    public List<MediaThumbnail> getMediaThumbnail() {
+        return mediaThumbnail;
     }
 
 
-    public void setMedia$thumbnail(List<Media$thumbnail> media$thumbnail) {
-        this.media$thumbnail = media$thumbnail;
+    public void setMediaThumbnail(List<MediaThumbnail> mediaThumbnail) {
+        this.mediaThumbnail = mediaThumbnail;
     }
 
 
@@ -82,13 +82,13 @@ public class MediaGroup {
     }
 
 
-    public Media$description getMedia$description() {
-        return media$description;
+    public MediaDescription getMediaDescription() {
+        return mediaDescription;
     }
 
 
-    public void setMedia$description(Media$description media$description) {
-        this.media$description = media$description;
+    public void setMediaDescription(MediaDescription mediaDescription) {
+        this.mediaDescription = mediaDescription;
     }
 
 }

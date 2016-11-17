@@ -5,7 +5,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 
-public class Media$description {
+public class MediaTitle {
 
     @SerializedName("$t")
     @Expose

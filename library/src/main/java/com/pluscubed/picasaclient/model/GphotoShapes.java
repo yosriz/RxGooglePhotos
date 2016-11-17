@@ -5,7 +5,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 
-public class Gphoto$shapes {
+public class GphotoShapes {
 
     @SerializedName("faces")
     @Expose
