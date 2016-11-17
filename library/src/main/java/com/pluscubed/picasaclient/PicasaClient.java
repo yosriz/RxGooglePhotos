@@ -64,24 +64,24 @@ public class PicasaClient {
     private PicasaClient() {
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(new Interceptor() {
-            @Override
-            public Response intercept(Chain chain) throws IOException {
-                Request originalRequest = chain.request();
-                if (originalRequest.body() != null || originalRequest.header("Authorization") != null) {
-                    return chain.proceed(originalRequest);
-                }
+                    @Override
+                    public Response intercept(Chain chain) throws IOException {
+                        Request originalRequest = chain.request();
+                        if (originalRequest.body() != null || originalRequest.header("Authorization") != null) {
+                            return chain.proceed(originalRequest);
+                        }
 
-                HttpUrl jsonUrl = originalRequest.url().newBuilder()
-                        .addQueryParameter("alt", "json")
-                        .build();
+                        HttpUrl jsonUrl = originalRequest.url().newBuilder()
+                                .addQueryParameter("alt", "json")
+                                .build();
 
-                Request authorizedRequest = originalRequest.newBuilder()
-                        .url(jsonUrl)
-                        .header("Authorization", "Bearer " + mOAuthToken)
-                        .header("Gdata-version", "2")
-                        .build();
-                return chain.proceed(authorizedRequest);
-            }
+                        Request authorizedRequest = originalRequest.newBuilder()
+                                .url(jsonUrl)
+                                .header("Authorization", "Bearer " + mOAuthToken)
+                                .header("Gdata-version", "2")
+                                .build();
+                        return chain.proceed(authorizedRequest);
+                    }
                 }).build();
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -222,12 +222,12 @@ public class PicasaClient {
         }
     }
 
-    public boolean isInitialized(){
-        return mOAuthToken!=null;
+    public boolean isInitialized() {
+        return mOAuthToken != null;
     }
 
     @Nullable
-    public Account getAccount(){
+    public Account getAccount() {
         return mAccount;
     }
 
@@ -252,6 +252,22 @@ public class PicasaClient {
     public Single<AlbumFeed> getAlbumFeed(long albumId) {
         checkTokenInitialized();
         return mPicasaService.getAlbumFeedResponse(albumId)
+                .map(new Func1<AlbumFeedResponse, AlbumFeed>() {
+                    @Override
+                    public AlbumFeed call(AlbumFeedResponse response) {
+                        return response.getFeed();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .toSingle();
+    }
+
+    public Single<AlbumFeed> getAlbumFeed(long albumId, int startIndex, int maxResults) {
+        checkTokenInitialized();
+        if (startIndex < 1) {
+            throw new IllegalArgumentException("Illegal start index, must be above 0");
+        }
+        return mPicasaService.getAlbumFeedResponse(albumId, startIndex, maxResults)
                 .map(new Func1<AlbumFeedResponse, AlbumFeed>() {
                     @Override
                     public AlbumFeed call(AlbumFeedResponse response) {
