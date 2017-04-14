@@ -11,6 +11,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
@@ -27,12 +28,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -47,10 +49,12 @@ import rx.schedulers.Schedulers;
 public class PicasaClient {
 
     public static final String ACCOUNT_TYPE_GOOGLE = "com.google";
+    private static boolean DEBUG = BuildConfig.DEBUG || Log.isLoggable("pluscubed.picasaclient", Log.DEBUG);
 
     private static final String SCOPE_PICASA = "https://picasaweb.google.com/data/";
     private static final String BASE_API_URL = "https://picasaweb.google.com/data/feed/api/user/";
 
+    private static final int TIMEOUT_SEC = 30;
     private static final int REQUEST_ACCOUNT_PICKER = 1000;
     private static final int REQUEST_RECOVER_PLAY_SERVICES_ERROR = 1024;
 
@@ -62,10 +66,10 @@ public class PicasaClient {
     private PicasaService mPicasaService;
 
     private PicasaClient() {
-        OkHttpClient client = new OkHttpClient.Builder()
+        OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
                 .addInterceptor(new Interceptor() {
                     @Override
-                    public Response intercept(Chain chain) throws IOException {
+                    public okhttp3.Response intercept(Chain chain) throws IOException {
                         Request originalRequest = chain.request();
                         if (originalRequest.body() != null || originalRequest.header("Authorization") != null) {
                             return chain.proceed(originalRequest);
@@ -82,13 +86,19 @@ public class PicasaClient {
                                 .build();
                         return chain.proceed(authorizedRequest);
                     }
-                }).build();
-
+                });
+        if (DEBUG) {
+            HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.HEADERS);
+            clientBuilder.addInterceptor(loggingInterceptor);
+        }
+        clientBuilder.connectTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
+                .readTimeout(TIMEOUT_SEC, TimeUnit.SECONDS);
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_API_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-                .client(client)
+                .client(clientBuilder.build())
                 .build();
 
         mPicasaService = retrofit.create(PicasaService.class);
