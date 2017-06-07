@@ -22,7 +22,9 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.bumptech.glide.Glide;
+import com.pluscubed.picasaclient.PicasaApiService;
 import com.pluscubed.picasaclient.PicasaClient;
+import com.pluscubed.picasaclient.PicasaClient2;
 import com.pluscubed.picasaclient.model.AlbumEntry;
 import com.pluscubed.picasaclient.model.AlbumFeed;
 import com.pluscubed.picasaclient.model.ExifTags;
@@ -33,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import rx.Completable;
+import rx.CompletableSubscriber;
 import rx.SingleSubscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
@@ -60,13 +63,15 @@ public class MainActivity extends AppCompatActivity {
 
     private Account mAccount;
     private TextView mAccountText;
+    private PicasaClient2 picasaClient2;
+    private PicasaApiService picasaService;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        PicasaClient.get().attachActivity(this);
+        picasaClient2 = new PicasaClient2(this);
 
         mAlbumMode = true;
 
@@ -84,62 +89,23 @@ public class MainActivity extends AppCompatActivity {
 
         mRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
         mRefreshLayout.setColorSchemeColors(ContextCompat.getColor(this, R.color.colorAccent));
-        mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                if (PicasaClient.get().isInitialized()) {
-                    reload(true);
-                }
+        mRefreshLayout.setOnRefreshListener(() -> {
+            if (PicasaClient.get().isInitialized()) {
+                reload(true);
             }
         });
 
         Button choose = (Button) findViewById(R.id.choose_account);
-        choose.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                PicasaClient.get().pickAccount();
-            }
-        });
+        choose.setOnClickListener(v -> picasaClient2.createPicasaApiService()
+                .subscribe(picasaApiService -> {
+                    picasaService = picasaApiService;
+                    reload(false);
+                })
+        );
 
         mAccountText = (TextView) findViewById(R.id.account);
-
-
-        if (PicasaClient.get().isInitialized()) {
-            reload(false);
-        } else {
-            String savedAccount = PreferenceManager.getDefaultSharedPreferences(this).getString(PREF_ACCOUNT, null);
-            if (savedAccount != null) {
-                mAccount = new Account(savedAccount, PicasaClient.ACCOUNT_TYPE_GOOGLE);
-                PicasaClient.get().setAccount(mAccount)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new Completable.CompletableSubscriber() {
-                            @Override
-                            public void onCompleted() {
-                                reload(false);
-                            }
-
-                            @Override
-                            public void onError(Throwable e) {
-
-                            }
-
-                            @Override
-                            public void onSubscribe(Subscription d) {
-
-                            }
-                        });
-            }
-        }
-
-        updateAccount();
     }
 
-    private void updateAccount() {
-        mAccount = PicasaClient.get().getAccount();
-        if (mAccount != null)
-            PreferenceManager.getDefaultSharedPreferences(this).edit().putString(PREF_ACCOUNT, mAccount.name).apply();
-        mAccountText.setText(String.format(getString(R.string.account), mAccount == null ? "None" : mAccount.name));
-    }
 
     private void reload(boolean force) {
         mReloading = true;
@@ -148,46 +114,32 @@ public class MainActivity extends AppCompatActivity {
         mRefreshLayout.setRefreshing(true);
         if (mAlbumMode) {
             if (force || mAlbumEntries.isEmpty()) {
-                PicasaClient.get().getUserFeed()
+                picasaService.getUserFeed()
                         .toObservable()
                         .retry(5)
                         .toSingle()
                         .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new SingleSubscriber<UserFeed>() {
-                            @Override
-                            public void onSuccess(UserFeed feed) {
-                                mAlbumEntries = feed.getAlbumEntries();
-
-                                onReloadFinished();
-                            }
-
-                            @Override
-                            public void onError(Throwable error) {
-                                MainActivity.this.onError(error);
-                            }
-                        });
+                        .subscribe(userFeed -> {
+                                    mAlbumEntries = userFeed.getAlbumEntries();
+                                    onReloadFinished();
+                                },
+                                MainActivity.this::onError
+                        );
             } else {
                 onReloadFinished();
             }
         } else {
-            PicasaClient.get().getAlbumFeed(mAlbumId)
+            picasaService.getAlbumFeed(mAlbumId)
                     .toObservable()
                     .retry(5)
                     .toSingle()
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new SingleSubscriber<AlbumFeed>() {
-                        @Override
-                        public void onSuccess(AlbumFeed albumFeed) {
-                            mPhotoEntries = albumFeed.getPhotoEntries();
-
-                            onReloadFinished();
-                        }
-
-                        @Override
-                        public void onError(Throwable error) {
-                            MainActivity.this.onError(error);
-                        }
-                    });
+                    .subscribe(albumFeed -> {
+                                mPhotoEntries = albumFeed.getPhotoEntries();
+                                onReloadFinished();
+                            },
+                            MainActivity.this::onError
+                    );
         }
     }
 
@@ -208,32 +160,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        PicasaClient.get().onActivityResult(requestCode, resultCode, data)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Completable.CompletableSubscriber() {
-                    @Override
-                    public void onCompleted() {
-                        updateAccount();
-                        reload(false);
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onSubscribe(Subscription d) {
-
-                    }
-                });
+        picasaClient2.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
 
-        PicasaClient.get().detach();
+//        picasaClient2.detach();
     }
 
     @Override
@@ -321,35 +255,32 @@ public class MainActivity extends AppCompatActivity {
                 title = (TextView) itemView.findViewById(R.id.title);
                 subtitle = (TextView) itemView.findViewById(R.id.subtitle);
 
-                itemView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (getAdapterPosition() != RecyclerView.NO_POSITION) {
-                            if (mAlbumMode) {
-                                mAlbumMode = false;
-                                mAlbumId = mAlbumEntries.get(getAdapterPosition()).getGphotoId();
-                                reload(false);
-                            } else {
-                                PhotoEntry entry = mPhotoEntries.get(getAdapterPosition());
+                itemView.setOnClickListener(v -> {
+                    if (getAdapterPosition() != RecyclerView.NO_POSITION) {
+                        if (mAlbumMode) {
+                            mAlbumMode = false;
+                            mAlbumId = mAlbumEntries.get(getAdapterPosition()).getGphotoId();
+                            reload(false);
+                        } else {
+                            PhotoEntry entry = mPhotoEntries.get(getAdapterPosition());
 
-                                ExifTags exifTags = entry.getExifTags();
+                            ExifTags exifTags = entry.getExifTags();
 
-                                String dateTime = DateUtils.formatDateTime(MainActivity.this, entry.getGphotoTimestamp(),
-                                        DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_TIME);
-                                String camera = exifTags.getExifMake() + " " + exifTags.getExifModel();
+                            String dateTime = DateUtils.formatDateTime(MainActivity.this, entry.getGphotoTimestamp(),
+                                    DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_TIME);
+                            String camera = exifTags.getExifMake() + " " + exifTags.getExifModel();
 
 
-                                new MaterialDialog.Builder(MainActivity.this)
-                                        .content("Time: " + dateTime
-                                                + "\n" + "Camera: " + camera
-                                                + "\n" + "ISO: " + exifTags.getExifIso()
-                                                + "\n" + "F-Stop: " + exifTags.getExifFstop()
-                                                + "\n" + "Exposure: 1/" + (int) (1 / exifTags.getExifExposure() + 0.5) + "s"
-                                                + "\n" + "Focal Length: " + exifTags.getExifFocalLength() + "mm"
-                                                + "\n" + "Distance: " + exifTags.getExifDistance())
-                                        .positiveText(android.R.string.ok)
-                                        .show();
-                            }
+                            new MaterialDialog.Builder(MainActivity.this)
+                                    .content("Time: " + dateTime
+                                            + "\n" + "Camera: " + camera
+                                            + "\n" + "ISO: " + exifTags.getExifIso()
+                                            + "\n" + "F-Stop: " + exifTags.getExifFstop()
+                                            + "\n" + "Exposure: 1/" + (int) (1 / exifTags.getExifExposure() + 0.5) + "s"
+                                            + "\n" + "Focal Length: " + exifTags.getExifFocalLength() + "mm"
+                                            + "\n" + "Distance: " + exifTags.getExifDistance())
+                                    .positiveText(android.R.string.ok)
+                                    .show();
                         }
                     }
                 });
