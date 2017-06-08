@@ -1,13 +1,14 @@
 package com.yosriz.picasaclient;
 
-
 import com.yosriz.picasaclient.model.AlbumEntry;
 import com.yosriz.picasaclient.model.AlbumFeed;
 import com.yosriz.picasaclient.model.AlbumFeedResponse;
 import com.yosriz.picasaclient.model.UserFeed;
+import com.yosriz.picasaclient.model.UserFeedResponse;
 
-import rx.Single;
-import rx.schedulers.Schedulers;
+import io.reactivex.Single;
+import io.reactivex.schedulers.Schedulers;
+
 
 public class PicasaApiService {
 
@@ -19,16 +20,15 @@ public class PicasaApiService {
 
     public Single<UserFeed> getUserFeed() {
         return picasaApi.getUserFeedResponse()
-                .map(response -> response.getFeed())
-                .subscribeOn(Schedulers.io())
-                .toSingle();
+                .map(UserFeedResponse::getFeed)
+                .subscribeOn(Schedulers.io());
     }
 
     public Single<AlbumFeed> getAlbumFeed(long albumId) {
         return picasaApi.getAlbumFeedResponse(albumId)
                 .map(AlbumFeedResponse::getFeed)
-                .subscribeOn(Schedulers.io())
-                .toSingle();
+                .subscribeOn(Schedulers.io());
+
     }
 
     public Single<AlbumFeed> getAlbumFeed(long albumId, int startIndex, int maxResults) {
@@ -37,8 +37,7 @@ public class PicasaApiService {
         }
         return picasaApi.getAlbumFeedResponse(albumId, startIndex, maxResults)
                 .map(AlbumFeedResponse::getFeed)
-                .subscribeOn(Schedulers.io())
-                .toSingle();
+                .subscribeOn(Schedulers.io());
     }
 
     public Single<AlbumEntry> getGooglePhotosAlbum() {

@@ -8,6 +8,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.OptionalPendingResult;
+import com.google.android.gms.common.api.Scope;
 
 import android.accounts.Account;
 import android.annotation.SuppressLint;
@@ -21,6 +22,7 @@ import java.util.List;
 import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
+import io.reactivex.schedulers.Schedulers;
 
 public class GoogleSignIn {
 
@@ -48,7 +50,7 @@ public class GoogleSignIn {
 
     private static class GoogleSignInOnSubscriber implements SingleOnSubscribe<String>, OnActivityResultListener {
 
-        private GoogleApiClient mGoogleApiClient;
+        private GoogleApiClient googleApiClient;
         private SingleEmitter<String> emitter;
         private AppCompatActivity activity;
 
@@ -62,26 +64,34 @@ public class GoogleSignIn {
             initGoogleApiClient(emitter);
 
             emitter.setCancellable(() -> {
-                mGoogleApiClient.disconnect();
+                disconnect();
                 activity = null;
             });
 
-            OptionalPendingResult<GoogleSignInResult> result = Auth.GoogleSignInApi.silentSignIn(mGoogleApiClient);
+            OptionalPendingResult<GoogleSignInResult> result = Auth.GoogleSignInApi.silentSignIn(googleApiClient);
             if (result.isDone()) {
                 handleSignInResult(result.get());
             } else {
-                Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+                Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
                 activity.startActivityForResult(signInIntent, RC_SIGN_IN);
+            }
+        }
+
+        private void disconnect() {
+            if (googleApiClient != null) {
+                googleApiClient.stopAutoManage(activity);
+                if (googleApiClient.isConnected()) {
+                    googleApiClient.disconnect();
+                }
             }
         }
 
         private void initGoogleApiClient(SingleEmitter<String> emitter) {
             final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                     .requestEmail()
-                    .requestId()
-                    //.requestScopes(new Scope(SCOPE_PICASA))
+                    .requestScopes(new Scope(SCOPE_PICASA))
                     .build();
-            mGoogleApiClient = new GoogleApiClient.Builder(activity)
+            googleApiClient = new GoogleApiClient.Builder(activity)
                     .enableAutoManage(activity,
                             connectionResult -> emitter.onError(new SignInException("SignIn", connectionResult.getErrorMessage(), connectionResult.getErrorCode())
                             )
@@ -91,22 +101,24 @@ public class GoogleSignIn {
         }
 
         private void handleSignInResult(GoogleSignInResult result) {
-            if (result.isSuccess()) {
-                if (result.getSignInAccount() != null && result.getSignInAccount().getAccount() != null) {
-                    Account account = result.getSignInAccount().getAccount();
-                    try {
-                        String token = GoogleAuthUtil.getToken(activity, account, "oauth2:" + SCOPE_PICASA);
-                        emitter.onSuccess(token);
-                    } catch (IOException | GoogleAuthException e) {
-                        emitter.onError(new SignInException("SignIn", e));
+            Schedulers.newThread().createWorker().schedule(() -> {
+                if (result.isSuccess()) {
+                    if (result.getSignInAccount() != null && result.getSignInAccount().getAccount() != null) {
+                        Account account = result.getSignInAccount().getAccount();
+                        try {
+                            String token = GoogleAuthUtil.getToken(activity, account, "oauth2:" + SCOPE_PICASA);
+                            emitter.onSuccess(token);
+                        } catch (IOException | GoogleAuthException e) {
+                            emitter.onError(new SignInException("SignIn", e));
+                        }
+                    } else {
+                        emitter.onError(new SignInException("SignIn", "getSignInAccount is null!", 0));
                     }
-                } else {
-                    emitter.onError(new SignInException("SignIn", "getSignInAccount is null!", 0));
-                }
 
-            } else {
-                emitter.onError(new SignInException("SignIn", result.getStatus().getStatusMessage(), result.getStatus().getStatusCode()));
-            }
+                } else {
+                    emitter.onError(new SignInException("SignIn", result.getStatus().getStatusMessage(), result.getStatus().getStatusCode()));
+                }
+            });
         }
 
         public void onActivityResult(int requestCode, int resultCode, Intent data) {
