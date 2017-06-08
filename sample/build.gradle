@@ -5,7 +5,7 @@ android {
     buildToolsVersion "25.0.2"
 
     defaultConfig {
-        applicationId "com.pluscubed.picasaclientsample"
+        applicationId "com.yosriz.picasaclientsample"
         minSdkVersion 16
         targetSdkVersion 23
         versionCode 1

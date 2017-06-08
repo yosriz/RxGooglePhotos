@@ -1,7 +1,5 @@
 apply plugin: 'com.android.library'
 
-group = 'com.pluscubed'
-
 android {
     compileSdkVersion 25
     buildToolsVersion '25.0.2'
