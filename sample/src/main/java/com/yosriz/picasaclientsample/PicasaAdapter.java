@@ -22,13 +22,14 @@ class PicasaAdapter extends RecyclerView.Adapter<PicasaAdapter.ViewHolder> {
     private boolean albumMode;
     private List<AlbumEntry> albumEntries = new ArrayList<>();
     private List<PhotoEntry> photoEntries = new ArrayList<>();
-    private PicasaAdapaterClickListener clickListener;
+    private PicasaAdapterClickListener clickListener;
 
-    public interface PicasaAdapaterClickListener {
+    public interface PicasaAdapterClickListener {
 
         void photoClicked(PhotoEntry photo);
 
         void albumClicked(long albumId);
+
     }
 
     public PicasaAdapter(Context context, boolean albumMode) {
@@ -93,12 +94,19 @@ class PicasaAdapter extends RecyclerView.Adapter<PicasaAdapter.ViewHolder> {
         return albumMode ? albumEntries.get(position).getGphotoId() : photoEntries.get(position).getGphotoId();
     }
 
-    public void setItemClickListener(PicasaAdapaterClickListener clickListener) {
+    public void setItemClickListener(PicasaAdapterClickListener clickListener) {
         this.clickListener = clickListener;
+    }
+
+    public void clear() {
+        albumEntries.clear();
+        photoEntries.clear();
+        notifyDataSetChanged();
     }
 
     public void setAlbumEntries(List<AlbumEntry> albumEntries) {
         this.albumEntries = albumEntries;
+        notifyDataSetChanged();
     }
 
     public void setAlbumMode(boolean albumMode) {
@@ -107,6 +115,7 @@ class PicasaAdapter extends RecyclerView.Adapter<PicasaAdapter.ViewHolder> {
 
     public void setPhotoEntries(List<PhotoEntry> photoEntries) {
         this.photoEntries = photoEntries;
+        notifyDataSetChanged();
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {

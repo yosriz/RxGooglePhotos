@@ -34,8 +34,6 @@ public class MainActivity extends AppCompatActivity {
     private boolean albumMode;
     private long mAlbumId;
 
-    private boolean mReloading;
-
     private PicasaAdapter mAdapter;
     private SwipeRefreshLayout mRefreshLayout;
 
@@ -65,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
         mRefreshLayout.setColorSchemeColors(ContextCompat.getColor(this, R.color.colorAccent));
         mRefreshLayout.setOnRefreshListener(() -> {
             if (PicasaClient.get().isInitialized()) {
-                reload(true);
+                reload();
             }
         });
 
@@ -74,13 +72,18 @@ public class MainActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(picasaApiService -> {
                     picasaService = picasaApiService;
-                    reload(false);
+                    reload();
+                }, throwable -> {
+                    new MaterialDialog.Builder(MainActivity.this)
+                            .content("Error getting access.\n" + throwable.getMessage())
+                            .positiveText(android.R.string.ok)
+                            .show();
                 })
         );
 
         mAccountText = (TextView) findViewById(R.id.account);
         mAdapter.setItemClickListener(
-                new PicasaAdapter.PicasaAdapaterClickListener() {
+                new PicasaAdapter.PicasaAdapterClickListener() {
                     @Override
                     public void photoClicked(PhotoEntry photo) {
                         ExifTags exifTags = photo.getExifTags();
@@ -105,21 +108,20 @@ public class MainActivity extends AppCompatActivity {
                     public void albumClicked(long albumId) {
                         albumMode = false;
                         mAlbumId = albumId;
-                        reload(false);
+                        reload();
                     }
                 }
         );
     }
 
-    private void reload(boolean force) {
-        mReloading = true;
-        mAdapter.notifyDataSetChanged();
+    private void reload() {
+        mAdapter.clear();
         mAdapter.setAlbumMode(albumMode);
 
         mRefreshLayout.setRefreshing(true);
         if (albumMode) {
             picasaService.getUserFeed()
-                    .retry(5)
+                    .retry(2)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(userFeed -> {
                                 mAdapter.setAlbumEntries(userFeed.getAlbumEntries());
@@ -129,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
                     );
         } else {
             picasaService.getAlbumFeed(mAlbumId)
-                    .retry(5)
+                    .retry(2)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(albumFeed -> {
                                 mAdapter.setPhotoEntries(albumFeed.getPhotoEntries());
@@ -141,13 +143,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onReloadFinished() {
-        mReloading = false;
-        mAdapter.notifyDataSetChanged();
         mRefreshLayout.setRefreshing(false);
     }
 
     private void onError(Throwable error) {
-        mReloading = false;
         error.printStackTrace();
         mRefreshLayout.setRefreshing(false);
         Toast.makeText(MainActivity.this, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
@@ -164,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         if (!albumMode) {
             albumMode = true;
-            reload(false);
+            reload();
         } else {
             super.onBackPressed();
         }
