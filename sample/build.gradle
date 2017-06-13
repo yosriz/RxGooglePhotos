@@ -5,7 +5,7 @@ android {
     buildToolsVersion "25.0.2"
 
     defaultConfig {
-        applicationId "com.yosriz.picasaclientsample"
+        applicationId "com.yosriz.gphotosclientsample"
         minSdkVersion 16
         targetSdkVersion 25
         versionCode 1
@@ -37,7 +37,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:25.3.1'
-    compile 'com.android.support:recyclerview-v7:23.3.0'
+    compile 'com.android.support:recyclerview-v7:25.3.1'
     compile 'com.github.bumptech.glide:glide:3.7.0'
     compile 'com.github.afollestad.material-dialogs:core:0.8.5.7'
     compile project(':library')
