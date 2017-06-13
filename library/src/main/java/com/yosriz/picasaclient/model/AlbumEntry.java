@@ -11,7 +11,7 @@ import java.util.List;
 
 public class AlbumEntry {
 
-    public static final String TYPE_GOOGLE_PHOTOS = "InstantUpload";
+    public static final String TYPE_GOOGLE_PHOTOS_INSTANT_UPLOAD = "InstantUpload";
     public static final String TYPE_GOOGLE_PLUS = "Buzz";
     public static final String TYPE_PROFILE_PHOTOS = "ProfilePhotos";
     public static final String TYPE_SCRAPBOOK = "ScrapBook";

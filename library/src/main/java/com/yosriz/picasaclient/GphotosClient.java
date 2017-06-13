@@ -16,7 +16,7 @@ public class GphotosClient {
                     public AlbumEntry call(UserFeed userFeed) {
                         AlbumEntry  album = null;
                         for (AlbumEntry entry : userFeed.getAlbumEntries()) {
-                            if (AlbumEntry.TYPE_GOOGLE_PHOTOS.equals(entry.getGphotoAlbumType())) {
+                            if (AlbumEntry.TYPE_GOOGLE_PHOTOS_INSTANT_UPLOAD.equals(entry.getGphotoAlbumType())) {
                                 album = entry;
                                 break;
                             }

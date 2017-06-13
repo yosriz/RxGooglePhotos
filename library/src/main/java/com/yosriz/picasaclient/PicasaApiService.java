@@ -24,6 +24,15 @@ public class PicasaApiService {
                 .subscribeOn(Schedulers.io());
     }
 
+    public Single<UserFeed> getUserFeed(int startIndex, int maxResults) {
+        if (startIndex < 1) {
+            throw new IllegalArgumentException("Illegal start index, must be above 0");
+        }
+        return picasaApi.getUserFeedResponse(startIndex, maxResults)
+                .map(UserFeedResponse::getFeed)
+                .subscribeOn(Schedulers.io());
+    }
+
     public Single<AlbumFeed> getAlbumFeed(long albumId) {
         return picasaApi.getAlbumFeedResponse(albumId)
                 .map(AlbumFeedResponse::getFeed)
@@ -40,27 +49,11 @@ public class PicasaApiService {
                 .subscribeOn(Schedulers.io());
     }
 
-    public Single<AlbumEntry> getGooglePhotosAlbum() {
+    public Single<AlbumEntry> getGooglePhotosInstantUploadAlbum() {
         return getUserFeed()
-                .map(userFeed -> {
-                    AlbumEntry album = null;
-                    for (AlbumEntry entry : userFeed.getAlbumEntries()) {
-                        if (AlbumEntry.TYPE_GOOGLE_PHOTOS.equals(entry.getGphotoAlbumType())) {
-                            album = entry;
-                            break;
-                        }
-                    }
-                    return album;
-                });
+                .flattenAsObservable(UserFeed::getAlbumEntries)
+                .filter(albumEntry -> AlbumEntry.TYPE_GOOGLE_PHOTOS_INSTANT_UPLOAD.equals(albumEntry.getGphotoAlbumType()))
+                .firstOrError();
     }
 
-    public Single<AlbumFeed> getGooglePhotosAlbumFeed() {
-        return getGooglePhotosAlbum()
-                .flatMap(albumEntry -> getAlbumFeed(albumEntry.getGphotoId()));
-    }
-
-    public Single<AlbumFeed> getGooglePhotosAlbumFeed(final int startIndex, final int maxResults) {
-        return getGooglePhotosAlbum()
-                .flatMap(albumEntry -> getAlbumFeed(albumEntry.getGphotoId(), startIndex, maxResults));
-    }
 }

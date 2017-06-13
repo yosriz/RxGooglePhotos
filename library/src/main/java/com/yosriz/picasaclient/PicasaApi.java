@@ -14,6 +14,10 @@ public interface PicasaApi {
     @GET("default")
     Single<UserFeedResponse> getUserFeedResponse();
 
+    @GET("default")
+    Single<UserFeedResponse> getUserFeedResponse(@Query("start-index") int startIndex,
+                                                 @Query("max-results") int maxResults);
+
     @GET("default/albumid/{albumId}")
     Single<AlbumFeedResponse> getAlbumFeedResponse(@Path("albumId") long albumId);
 

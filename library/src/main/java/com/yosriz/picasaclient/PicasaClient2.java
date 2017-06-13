@@ -56,7 +56,7 @@ public class PicasaClient2 {
                     Request authorizedRequest = originalRequest.newBuilder()
                             .url(jsonUrl)
                             .header("Authorization", "Bearer " + authToken)
-                            .header("Gdata-version", "2")
+                            .header("Gdata-version", "3")
                             .build();
                     return chain.proceed(authorizedRequest);
                 });

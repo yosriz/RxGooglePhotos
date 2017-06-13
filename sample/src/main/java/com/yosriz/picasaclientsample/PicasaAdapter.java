@@ -62,8 +62,8 @@ class PicasaAdapter extends RecyclerView.Adapter<PicasaAdapter.ViewHolder> {
             String gphotoAlbumType = albumEntry.getGphotoAlbumType();
             if (gphotoAlbumType != null) {
                 switch (gphotoAlbumType) {
-                    case AlbumEntry.TYPE_GOOGLE_PHOTOS:
-                        gphotoAlbumType = context.getString(R.string.google_photos);
+                    case AlbumEntry.TYPE_GOOGLE_PHOTOS_INSTANT_UPLOAD:
+                        gphotoAlbumType = context.getString(R.string.instant_upload);
                         break;
                     case AlbumEntry.TYPE_GOOGLE_PLUS:
                         gphotoAlbumType = context.getString(R.string.google_plus);
