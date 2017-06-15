@@ -1,5 +1,7 @@
 package com.yosriz.gphotosclient;
 
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+
 import com.yosriz.gphotosclient.model.AlbumEntry;
 import com.yosriz.gphotosclient.model.AlbumFeed;
 import com.yosriz.gphotosclient.model.AlbumFeedResponse;
@@ -13,9 +15,12 @@ import io.reactivex.schedulers.Schedulers;
 public class GooglePhotosService {
 
     private final PicasaApi picasaApi;
+    private final GoogleSignInAccount account;
 
-    GooglePhotosService(PicasaApi picasaApi) {
+    GooglePhotosService(PicasaApi picasaApi,
+                        GoogleSignInAccount account) {
         this.picasaApi = picasaApi;
+        this.account = account;
     }
 
     public Single<UserFeed> getUserFeed() {
@@ -56,4 +61,7 @@ public class GooglePhotosService {
                 .firstOrError();
     }
 
+    public GoogleSignInAccount getAccount() {
+        return account;
+    }
 }

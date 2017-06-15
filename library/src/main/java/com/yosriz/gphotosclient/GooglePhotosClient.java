@@ -24,11 +24,9 @@ public class GooglePhotosClient {
     private static final String BASE_API_URL = "https://picasaweb.google.com/data/feed/api/user/";
     private static final int TIMEOUT_SEC = 30;
 
-    private final AppCompatActivity activity;
     private final GoogleSignIn googleSignIn;
 
-    public GooglePhotosClient(AppCompatActivity activity) {
-        this.activity = activity;
+    public GooglePhotosClient() {
         googleSignIn = new GoogleSignIn();
     }
 
@@ -36,9 +34,9 @@ public class GooglePhotosClient {
         googleSignIn.onActivityResult(requestCode, resultCode, data);
     }
 
-    public Single<GooglePhotosService> createGooglePhotosService() {
+    public Single<GooglePhotosService> createGooglePhotosService(AppCompatActivity activity) {
         return googleSignIn.getToken(activity)
-                .map(token -> new GooglePhotosService(createRetrofit(token)));
+                .map(signInAccount -> new GooglePhotosService(createRetrofit(signInAccount.getToken()), signInAccount.getAccount()));
     }
 
     private PicasaApi createRetrofit(String authToken) {

@@ -2,6 +2,6 @@
     <string name="app_name">Google Photos Client Sample</string>
     <string name="instant_upload">Instant Upload</string>
     <string name="google_plus">Google+</string>
-    <string name="choose_account">Choose Account</string>
+    <string name="choose_account">Sign in</string>
     <string name="account">Account: %s</string>
 </resources>

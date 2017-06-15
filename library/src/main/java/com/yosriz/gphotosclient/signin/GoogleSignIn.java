@@ -1,19 +1,20 @@
 package com.yosriz.gphotosclient.signin;
 
 
-import android.accounts.Account;
-import android.annotation.SuppressLint;
-import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
-
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.Scope;
+
+import android.accounts.Account;
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.support.v7.app.AppCompatActivity;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,11 +31,29 @@ public class GoogleSignIn {
         void onActivityResult(int requestCode, int resultCode, Intent data);
     }
 
+    public static class SignInAccount {
+        private final String token;
+        private final GoogleSignInAccount account;
+
+        public SignInAccount(String token, GoogleSignInAccount account) {
+            this.token = token;
+            this.account = account;
+        }
+
+        public GoogleSignInAccount getAccount() {
+            return account;
+        }
+
+        public String getToken() {
+            return token;
+        }
+    }
+
     private static final String SCOPE_PICASA = "https://picasaweb.google.com/data/";
     private static final int RC_SIGN_IN = 42;
     private List<OnActivityResultListener> activityResultListeners = new ArrayList<>();
 
-    public Single<String> getToken(final AppCompatActivity activity) {
+    public Single<SignInAccount> getToken(final AppCompatActivity activity) {
         GoogleSignInOnSubscriber subscriber = new GoogleSignInOnSubscriber(activity);
         activityResultListeners.add(subscriber);
         return Single.create(subscriber)
@@ -48,10 +67,10 @@ public class GoogleSignIn {
         }
     }
 
-    private static class GoogleSignInOnSubscriber implements SingleOnSubscribe<String>, OnActivityResultListener {
+    private static class GoogleSignInOnSubscriber implements SingleOnSubscribe<SignInAccount>, OnActivityResultListener {
 
         private GoogleApiClient googleApiClient;
-        private SingleEmitter<String> emitter;
+        private SingleEmitter<SignInAccount> emitter;
         private AppCompatActivity activity;
 
         private GoogleSignInOnSubscriber(AppCompatActivity activity) {
@@ -59,7 +78,7 @@ public class GoogleSignIn {
         }
 
         @Override
-        public void subscribe(SingleEmitter<String> emitter) throws Exception {
+        public void subscribe(SingleEmitter<SignInAccount> emitter) throws Exception {
             this.emitter = emitter;
             initGoogleApiClient(emitter);
 
@@ -86,9 +105,10 @@ public class GoogleSignIn {
             }
         }
 
-        private void initGoogleApiClient(SingleEmitter<String> emitter) {
+        private void initGoogleApiClient(SingleEmitter<SignInAccount> emitter) {
             final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                     .requestEmail()
+                    .requestProfile()
                     .requestScopes(new Scope(SCOPE_PICASA))
                     .build();
             googleApiClient = new GoogleApiClient.Builder(activity)
@@ -107,7 +127,7 @@ public class GoogleSignIn {
                         Account account = result.getSignInAccount().getAccount();
                         try {
                             String token = GoogleAuthUtil.getToken(activity, account, "oauth2:" + SCOPE_PICASA);
-                            emitter.onSuccess(token);
+                            emitter.onSuccess(new SignInAccount(token, result.getSignInAccount()));
                         } catch (IOException | GoogleAuthException e) {
                             emitter.onError(new SignInException("SignIn", e));
                         }
