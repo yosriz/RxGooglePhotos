@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void btnChooseClick(View v) {
-        Disposable subscribe = googlePhotosClient.createGooglePhotosService(MainActivity.this)
+        Disposable subscribe = googlePhotosClient.createServiceWithSignIn(MainActivity.this)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(photosService -> {
                     this.photosService = photosService;

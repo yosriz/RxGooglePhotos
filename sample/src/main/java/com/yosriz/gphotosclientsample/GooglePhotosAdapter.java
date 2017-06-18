@@ -29,7 +29,6 @@ class GooglePhotosAdapter extends RecyclerView.Adapter<GooglePhotosAdapter.ViewH
         void photoClicked(PhotoEntry photo);
 
         void albumClicked(long albumId);
-
     }
 
     public GooglePhotosAdapter(Context context, boolean albumMode) {
