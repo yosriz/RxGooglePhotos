@@ -1,12 +1,11 @@
 package com.yosriz.gphotosclient.signin;
 
 
-import android.app.Activity;
-import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
-
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+
+import android.app.Activity;
+import android.content.Intent;
 
 import io.reactivex.schedulers.Schedulers;
 

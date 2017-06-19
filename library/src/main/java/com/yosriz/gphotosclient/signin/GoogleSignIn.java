@@ -6,7 +6,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +24,7 @@ public class GoogleSignIn {
         private final String token;
         private final GoogleSignInAccount account;
 
-        public SignInAccount(String token, GoogleSignInAccount account) {
+        SignInAccount(String token, GoogleSignInAccount account) {
             this.token = token;
             this.account = account;
         }
@@ -51,7 +50,7 @@ public class GoogleSignIn {
     }
 
     public Single<SignInAccount> getTokenSilently(final Context context) {
-        return Single.create(new GoogleSlientSignInOnSubscribe(context));
+        return Single.create(new GoogleSilentSignInOnSubscribe(context));
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
