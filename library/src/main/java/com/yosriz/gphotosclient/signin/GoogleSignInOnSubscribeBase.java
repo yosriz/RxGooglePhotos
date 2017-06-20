@@ -1,6 +1,10 @@
 package com.yosriz.gphotosclient.signin;
 
 
+import android.accounts.Account;
+import android.content.Context;
+import android.support.v4.app.FragmentActivity;
+
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.api.Auth;
@@ -9,9 +13,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
-
-import android.accounts.Account;
-import android.content.Context;
 
 import java.io.IOException;
 
@@ -60,6 +61,7 @@ abstract class GoogleSignInOnSubscribeBase implements SingleOnSubscribe<GoogleSi
                 .requestScopes(new Scope(SCOPE_PICASA))
                 .build();
         googleApiClient = new GoogleApiClient.Builder(context)
+                .enableAutoManage((FragmentActivity) context, connectionResult -> {})
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
     }
