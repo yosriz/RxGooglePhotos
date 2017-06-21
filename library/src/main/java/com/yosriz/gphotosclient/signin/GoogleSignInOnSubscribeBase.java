@@ -1,10 +1,6 @@
 package com.yosriz.gphotosclient.signin;
 
 
-import android.accounts.Account;
-import android.content.Context;
-import android.support.v4.app.FragmentActivity;
-
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.api.Auth;
@@ -14,10 +10,14 @@ import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
 
+import android.accounts.Account;
+import android.support.v4.app.FragmentActivity;
+
 import java.io.IOException;
 
 import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
+import io.reactivex.schedulers.Schedulers;
 
 abstract class GoogleSignInOnSubscribeBase implements SingleOnSubscribe<GoogleSignIn.SignInAccount> {
 
@@ -25,10 +25,10 @@ abstract class GoogleSignInOnSubscribeBase implements SingleOnSubscribe<GoogleSi
 
     protected GoogleApiClient googleApiClient;
     private SingleEmitter<GoogleSignIn.SignInAccount> emitter;
-    private Context context;
+    private FragmentActivity activity;
 
-    GoogleSignInOnSubscribeBase(Context context) {
-        this.context = context;
+    GoogleSignInOnSubscribeBase(FragmentActivity activity) {
+        this.activity = activity;
     }
 
     @Override
@@ -38,7 +38,7 @@ abstract class GoogleSignInOnSubscribeBase implements SingleOnSubscribe<GoogleSi
 
         emitter.setCancellable(() -> {
             disconnect();
-            context = null;
+            activity = null;
         });
 
         act();
@@ -60,32 +60,37 @@ abstract class GoogleSignInOnSubscribeBase implements SingleOnSubscribe<GoogleSi
                 .requestProfile()
                 .requestScopes(new Scope(SCOPE_PICASA))
                 .build();
-        googleApiClient = new GoogleApiClient.Builder(context)
-                .enableAutoManage((FragmentActivity) context, connectionResult -> {})
+        googleApiClient = new GoogleApiClient.Builder(activity)
+                .enableAutoManage(activity,
+                        connectionResult -> emitter.onError(new SignInException("Connecting", connectionResult.getErrorMessage(), connectionResult.getErrorCode())))
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
     }
 
     protected void handleSignInResult(GoogleSignInResult result) {
-        if (result.isSuccess()) {
-            if (result.getSignInAccount() != null && result.getSignInAccount().getAccount() != null) {
-                Account account = result.getSignInAccount().getAccount();
-                try {
-                    String token = GoogleAuthUtil.getToken(context, account, "oauth2:" + SCOPE_PICASA);
-                    emitter.onSuccess(new GoogleSignIn.SignInAccount(token, result.getSignInAccount()));
-                } catch (IOException | GoogleAuthException e) {
-                    emitter.onError(new SignInException("SignIn", e));
-                }
-            } else {
-                emitter.onError(new SignInException("SignIn", "getSignInAccount is null!", 0));
-            }
+        Schedulers.newThread()
+                .createWorker()
+                .schedule(() -> {
+                    if (result.isSuccess()) {
+                        if (result.getSignInAccount() != null && result.getSignInAccount().getAccount() != null) {
+                            Account account = result.getSignInAccount().getAccount();
+                            try {
+                                String token = GoogleAuthUtil.getToken(activity, account, "oauth2:" + SCOPE_PICASA);
+                                emitter.onSuccess(new GoogleSignIn.SignInAccount(token, result.getSignInAccount()));
+                            } catch (IOException | GoogleAuthException e) {
+                                emitter.onError(new SignInException("SignIn", e));
+                            }
+                        } else {
+                            emitter.onError(new SignInException("SignIn", "getSignInAccount is null!", 0));
+                        }
 
-        } else {
-            if (result.getStatus().getStatusCode() == CommonStatusCodes.SIGN_IN_REQUIRED) {
-                emitter.onError(new SignInRequiredException());
-            } else {
-                emitter.onError(new SignInException("SignIn", result.getStatus().getStatusMessage(), result.getStatus().getStatusCode()));
-            }
-        }
+                    } else {
+                        if (result.getStatus().getStatusCode() == CommonStatusCodes.SIGN_IN_REQUIRED) {
+                            emitter.onError(new SignInRequiredException());
+                        } else {
+                            emitter.onError(new SignInException("SignIn", result.getStatus().getStatusMessage(), result.getStatus().getStatusCode()));
+                        }
+                    }
+                });
     }
 }

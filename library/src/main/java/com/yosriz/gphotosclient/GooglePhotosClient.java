@@ -1,10 +1,9 @@
 package com.yosriz.gphotosclient;
 
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 
 import com.yosriz.gphotosclient.signin.GoogleSignIn;
@@ -12,6 +11,7 @@ import com.yosriz.gphotosclient.signin.SignInRequiredException;
 
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Completable;
 import io.reactivex.Single;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -38,29 +38,34 @@ public class GooglePhotosClient {
     }
 
     /**
-     * Creates a service without displaying UI, returns a {@link GooglePhotosService} for user who is
-     * signed in to the app.  If no user is signed in, try to sign the user in without displaying any user interface.
-     * <p>In case of no user signed in, onError will be called with {@link SignInRequiredException}, for getting access use {@link #createServiceWithSignIn(Activity)}.</p>
+     * Creates a service without displaying UI, returns a {@link GooglePhotosService} for user who
+     * is signed in to the app.  If no user is signed in, try to sign the user in without displaying
+     * any user interface. <p>In case of no user signed in, onError will be called with {@link
+     * SignInRequiredException}, for getting access use {@link #createServiceWithSignIn(FragmentActivity)}.</p>
      *
-     * @param context associated context
+     * @param activity associated activity
      * @return GooglePhotosService service when success
      */
-    public Single<GooglePhotosService> createServiceSilently(@NonNull Context context) {
-        return googleSignIn.getTokenSilently(context)
+    public Single<GooglePhotosService> createServiceSilently(@NonNull FragmentActivity activity) {
+        return googleSignIn.getTokenSilently(activity)
                 .map(signInAccount -> new GooglePhotosService(createRetrofit(signInAccount.getToken()), signInAccount.getAccount()));
     }
 
     /**
-     * Creates a service while UI might be displayed, returns a {@link GooglePhotosService} for user who is
-     * signed in to the app.
-     * <p>If no user is signed in, account selection and permission dialogs will be displayed.</p>
+     * Creates a service while UI might be displayed, returns a {@link GooglePhotosService} for user
+     * who is signed in to the app. <p>If no user is signed in, account selection and permission
+     * dialogs will be displayed.</p>
      *
      * @param activity associated activity to display UI on top
      * @return GooglePhotosService service when success
      */
-    public Single<GooglePhotosService> createServiceWithSignIn(@NonNull Activity activity) {
+    public Single<GooglePhotosService> createServiceWithSignIn(@NonNull FragmentActivity activity) {
         return googleSignIn.getToken(activity)
                 .map(signInAccount -> new GooglePhotosService(createRetrofit(signInAccount.getToken()), signInAccount.getAccount()));
+    }
+
+    public Completable signOut(@NonNull FragmentActivity activity) {
+        return googleSignIn.signOut(activity);
     }
 
     private PicasaApi createRetrofit(String authToken) {

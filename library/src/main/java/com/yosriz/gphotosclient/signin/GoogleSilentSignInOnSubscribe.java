@@ -5,12 +5,12 @@ import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.api.OptionalPendingResult;
 
-import android.content.Context;
+import android.support.v4.app.FragmentActivity;
 
 class GoogleSilentSignInOnSubscribe extends GoogleSignInOnSubscribeBase {
 
-    GoogleSilentSignInOnSubscribe(Context context) {
-        super(context);
+    GoogleSilentSignInOnSubscribe(FragmentActivity activity) {
+        super(activity);
     }
 
     @Override

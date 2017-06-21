@@ -3,13 +3,13 @@ package com.yosriz.gphotosclient.signin;
 
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
+import android.support.v4.app.FragmentActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.Completable;
 import io.reactivex.Single;
 
 public class GoogleSignIn {
@@ -41,7 +41,7 @@ public class GoogleSignIn {
 
     private List<OnActivityResultListener> activityResultListeners = new ArrayList<>();
 
-    public Single<SignInAccount> getToken(final Activity activity) {
+    public Single<SignInAccount> getToken(final FragmentActivity activity) {
         GoogleSignInOnSubscribe subscriber = new GoogleSignInOnSubscribe(activity);
         activityResultListeners.add(subscriber);
         return Single.create(subscriber)
@@ -49,9 +49,14 @@ public class GoogleSignIn {
                 .doAfterTerminate(() -> activityResultListeners.remove(subscriber));
     }
 
-    public Single<SignInAccount> getTokenSilently(final Context context) {
-        return Single.create(new GoogleSilentSignInOnSubscribe(context));
+    public Single<SignInAccount> getTokenSilently(final FragmentActivity activity) {
+        return Single.create(new GoogleSilentSignInOnSubscribe(activity));
     }
+
+    public Completable signOut(final FragmentActivity activity) {
+        return Completable.create(new GoogleSignOutOnSubscribe(activity));
+    }
+
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         for (OnActivityResultListener listener : activityResultListeners) {

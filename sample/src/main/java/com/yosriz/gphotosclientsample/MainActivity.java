@@ -1,5 +1,7 @@
 package com.yosriz.gphotosclientsample;
 
+import com.google.android.gms.common.SignInButton;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -15,7 +17,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.google.android.gms.common.SignInButton;
 import com.yosriz.gphotosclient.GooglePhotosClient;
 import com.yosriz.gphotosclient.GooglePhotosService;
 import com.yosriz.gphotosclient.model.ExifTags;
@@ -32,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
 
     private SwipeRefreshLayout refreshLayout;
     private TextView textViewAccount;
-    private SignInButton btnSignIn;
     private View containerIntro;
     private View containerPhotos;
 
@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private GooglePhotosClient googlePhotosClient;
     private GooglePhotosService photosService;
     private CompositeDisposable disposables = new CompositeDisposable();
+    private SignInButton btnSignIn;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -49,9 +50,6 @@ public class MainActivity extends AppCompatActivity {
 
         googlePhotosClient = new GooglePhotosClient();
         albumMode = true;
-
-        btnSignIn.setOnClickListener(this::btnSignInClick);
-        adapter.setItemClickListener(adapterClickListener);
     }
 
     @Override
@@ -59,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
         googlePhotosClient.createServiceSilently(MainActivity.this)
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(googlePhotosService -> {
                     setData(googlePhotosService);
 
@@ -80,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setData(GooglePhotosService googlePhotosService) {
         photosService = googlePhotosService;
-        String accountInfo = String.format("%s\n%s", photosService.getAccount().getDisplayName()
+        String accountInfo = String.format("%s ( %s )", photosService.getAccount().getDisplayName()
                 , photosService.getAccount().getEmail());
         textViewAccount.setText(accountInfo);
         reload();
@@ -95,6 +94,28 @@ public class MainActivity extends AppCompatActivity {
                 }, throwable ->
                         new MaterialDialog.Builder(MainActivity.this)
                                 .content("Error getting access.\n" + throwable.getMessage())
+                                .positiveText(android.R.string.ok)
+                                .show());
+        disposables.add(subscribe);
+    }
+
+    private void btnSignOutClick(View v) {
+        Disposable subscribe = googlePhotosClient.signOut(MainActivity.this)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(() -> {
+                    btnSignIn.setVisibility(View.VISIBLE);
+                    containerPhotos.animate()
+                            .alpha(0.0f)
+                            .withEndAction(() -> containerIntro.setVisibility(View.GONE))
+                            .start();
+                    containerIntro.setVisibility(View.VISIBLE);
+                    containerIntro.setAlpha(0.0f);
+                    containerIntro.animate()
+                            .alpha(1.0f)
+                            .start();
+                }, throwable ->
+                        new MaterialDialog.Builder(MainActivity.this)
+                                .content("Error sign out.\n" + throwable.getMessage())
                                 .positiveText(android.R.string.ok)
                                 .show());
         disposables.add(subscribe);
@@ -118,8 +139,12 @@ public class MainActivity extends AppCompatActivity {
         refreshLayout.setColorSchemeColors(ContextCompat.getColor(this, R.color.colorAccent));
         refreshLayout.setOnRefreshListener(this::reload);
 
-        btnSignIn = (SignInButton) findViewById(R.id.sigin_in_button);
+        btnSignIn = (SignInButton) findViewById(R.id.sign_in_button);
+        findViewById(R.id.sign_out_btn).setOnClickListener(this::btnSignOutClick);
         textViewAccount = (TextView) findViewById(R.id.account);
+
+        btnSignIn.setOnClickListener(this::btnSignInClick);
+        adapter.setItemClickListener(adapterClickListener);
 
         containerIntro.setVisibility(View.VISIBLE);
         btnSignIn.setVisibility(View.GONE);
