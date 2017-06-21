@@ -31,6 +31,7 @@ dependencies {
     compile 'com.squareup.retrofit2:adapter-rxjava2:2.2.0'
     //RxJava
     compile 'io.reactivex.rxjava2:rxjava:2.0.9'
+    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
 
     //Play services
     compile 'com.google.android.gms:play-services-auth:10.2.6'

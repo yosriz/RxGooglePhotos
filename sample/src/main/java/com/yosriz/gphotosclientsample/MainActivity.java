@@ -1,7 +1,5 @@
 package com.yosriz.gphotosclientsample;
 
-import com.google.android.gms.common.SignInButton;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -17,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.gms.common.SignInButton;
 import com.yosriz.gphotosclient.GooglePhotosClient;
 import com.yosriz.gphotosclient.GooglePhotosService;
 import com.yosriz.gphotosclient.model.ExifTags;
@@ -50,11 +49,6 @@ public class MainActivity extends AppCompatActivity {
 
         googlePhotosClient = new GooglePhotosClient();
         albumMode = true;
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
 
         googlePhotosClient.createServiceSilently(MainActivity.this)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -106,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
                     btnSignIn.setVisibility(View.VISIBLE);
                     containerPhotos.animate()
                             .alpha(0.0f)
-                            .withEndAction(() -> containerIntro.setVisibility(View.GONE))
+                            .withEndAction(() -> containerPhotos.setVisibility(View.GONE))
                             .start();
                     containerIntro.setVisibility(View.VISIBLE);
                     containerIntro.setAlpha(0.0f);

@@ -1,6 +1,9 @@
 package com.yosriz.gphotosclient.signin;
 
 
+import android.accounts.Account;
+import android.support.v4.app.FragmentActivity;
+
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.api.Auth;
@@ -10,13 +13,11 @@ import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
 
-import android.accounts.Account;
-import android.support.v4.app.FragmentActivity;
-
 import java.io.IOException;
 
 import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 abstract class GoogleSignInOnSubscribeBase implements SingleOnSubscribe<GoogleSignIn.SignInAccount> {
@@ -37,8 +38,10 @@ abstract class GoogleSignInOnSubscribeBase implements SingleOnSubscribe<GoogleSi
         initGoogleApiClient();
 
         emitter.setCancellable(() -> {
-            disconnect();
-            activity = null;
+            AndroidSchedulers.mainThread().scheduleDirect(() -> {
+                disconnect();
+                activity = null;
+            });
         });
 
         act();
@@ -49,6 +52,7 @@ abstract class GoogleSignInOnSubscribeBase implements SingleOnSubscribe<GoogleSi
     private void disconnect() {
         if (googleApiClient != null) {
             if (googleApiClient.isConnected()) {
+                googleApiClient.stopAutoManage(activity);
                 googleApiClient.disconnect();
             }
         }
@@ -69,8 +73,7 @@ abstract class GoogleSignInOnSubscribeBase implements SingleOnSubscribe<GoogleSi
 
     protected void handleSignInResult(GoogleSignInResult result) {
         Schedulers.newThread()
-                .createWorker()
-                .schedule(() -> {
+                .scheduleDirect(() -> {
                     if (result.isSuccess()) {
                         if (result.getSignInAccount() != null && result.getSignInAccount().getAccount() != null) {
                             Account account = result.getSignInAccount().getAccount();
