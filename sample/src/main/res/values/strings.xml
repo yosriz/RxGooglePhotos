@@ -1,7 +1,8 @@
 <resources>
-    <string name="app_name">Google Photos Client Sample</string>
+    <string name="app_name">Google Photos\\n Client Sample</string>
     <string name="instant_upload">Instant Upload</string>
     <string name="google_plus">Google+</string>
     <string name="choose_account">Sign in</string>
     <string name="account">Account: %s</string>
+    <string name="intro_title">Google Photos\n Client Sample</string>
 </resources>

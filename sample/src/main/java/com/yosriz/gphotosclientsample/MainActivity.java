@@ -11,11 +11,11 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateUtils;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.gms.common.SignInButton;
 import com.yosriz.gphotosclient.GooglePhotosClient;
 import com.yosriz.gphotosclient.GooglePhotosService;
 import com.yosriz.gphotosclient.model.ExifTags;
@@ -25,22 +25,18 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
-/**
- * Sample MainActivity
- * <p/>
- * Only a demo of the library - not guaranteed to be complete, stateful, nor structured well.
- */
 public class MainActivity extends AppCompatActivity {
-
 
     private boolean albumMode;
     private long mAlbumId;
 
     private SwipeRefreshLayout refreshLayout;
     private TextView textViewAccount;
-    private Button btnChoose;
-    private GooglePhotosAdapter adapter;
+    private SignInButton btnSignIn;
+    private View containerIntro;
+    private View containerPhotos;
 
+    private GooglePhotosAdapter adapter;
     private GooglePhotosClient googlePhotosClient;
     private GooglePhotosService photosService;
     private CompositeDisposable disposables = new CompositeDisposable();
@@ -54,19 +50,48 @@ public class MainActivity extends AppCompatActivity {
         googlePhotosClient = new GooglePhotosClient();
         albumMode = true;
 
-        btnChoose.setOnClickListener(this::btnChooseClick);
+        btnSignIn.setOnClickListener(this::btnSignInClick);
         adapter.setItemClickListener(adapterClickListener);
     }
 
-    private void btnChooseClick(View v) {
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        googlePhotosClient.createServiceSilently(MainActivity.this)
+                .subscribe(googlePhotosService -> {
+                    setData(googlePhotosService);
+
+                    displayPhotosContainer();
+                }, throwable -> btnSignIn.setVisibility(View.VISIBLE));
+    }
+
+    private void displayPhotosContainer() {
+        containerIntro.animate()
+                .alpha(0.0f)
+                .withEndAction(() -> containerIntro.setVisibility(View.GONE))
+                .start();
+        containerPhotos.setVisibility(View.VISIBLE);
+        containerPhotos.setAlpha(0.0f);
+        containerPhotos.animate()
+                .alpha(1.0f)
+                .start();
+    }
+
+    private void setData(GooglePhotosService googlePhotosService) {
+        photosService = googlePhotosService;
+        String accountInfo = String.format("%s\n%s", photosService.getAccount().getDisplayName()
+                , photosService.getAccount().getEmail());
+        textViewAccount.setText(accountInfo);
+        reload();
+    }
+
+    private void btnSignInClick(View v) {
         Disposable subscribe = googlePhotosClient.createServiceWithSignIn(MainActivity.this)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(photosService -> {
-                    this.photosService = photosService;
-                    String accountInfo = String.format("%s\n%s", photosService.getAccount().getDisplayName()
-                            , photosService.getAccount().getEmail());
-                    textViewAccount.setText(accountInfo);
-                    reload();
+                    setData(photosService);
+                    displayPhotosContainer();
                 }, throwable ->
                         new MaterialDialog.Builder(MainActivity.this)
                                 .content("Error getting access.\n" + throwable.getMessage())
@@ -86,13 +111,19 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         GridLayoutManager manager = new GridLayoutManager(this, 2);
         recyclerView.setLayoutManager(manager);
+        containerIntro = findViewById(R.id.intro_container);
+        containerPhotos = findViewById(R.id.photos_container);
 
         refreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
         refreshLayout.setColorSchemeColors(ContextCompat.getColor(this, R.color.colorAccent));
         refreshLayout.setOnRefreshListener(this::reload);
 
-        btnChoose = (Button) findViewById(R.id.choose_account);
+        btnSignIn = (SignInButton) findViewById(R.id.sigin_in_button);
         textViewAccount = (TextView) findViewById(R.id.account);
+
+        containerIntro.setVisibility(View.VISIBLE);
+        btnSignIn.setVisibility(View.GONE);
+        containerPhotos.setVisibility(View.GONE);
     }
 
     private GooglePhotosAdapter.ClickListener adapterClickListener = new GooglePhotosAdapter.ClickListener() {
