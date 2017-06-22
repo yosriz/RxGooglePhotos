@@ -2,6 +2,10 @@
 
 [![](https://jitpack.io/v/yosriz/RxGooglePhotos.svg)](https://jitpack.io/#yosriz/RxGooglePhotos)
 
+Reactive (RxJava2) API client for Google Photos (formerly known as Picasa)
+
+based on work done at [android-picasa-client](https://github.com/plusCubed/android-picasa-client) by Daniel Ciao.
+
 ### Dependency
 
 Add this in your root `build.gradle` file (**not** your module `build.gradle` file):
@@ -9,7 +13,6 @@ Add this in your root `build.gradle` file (**not** your module `build.gradle` fi
 ```gradle
 allprojects {
 	repositories {
-		...
 		maven { url "https://jitpack.io" }
 	}
 }
@@ -19,7 +22,6 @@ Add this to your module's `build.gradle` file:
 
 ```Gradle
 dependencies {
-	...
     compile 'com.github.yosriz:RxGooglePhotos:{latest-version}'	
 }
 ```
@@ -61,7 +63,11 @@ see Sample project for full demo.
 
 ### Create Google API OAuth credential
 
-TBD
+In order to be able to sign in using Google credentials, an app must be registered through Google Dev Console, using key store that app was signed with. 
+see this SO [answer](https://stackoverflow.com/a/41012703/3903847) for required steps.
+
+###Note 
+This library using [Picasa Web Albums Data API](https://developers.google.com/picasa-web/), as Google stated that [Picasa is retiring](https://developers.google.com/picasa-web/docs/3.0/releasenotes#picasa-is-retiring-february-12-2016), any breaking changes can be happen in the future.
 
 ### License
 
