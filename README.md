@@ -66,7 +66,7 @@ see Sample project for full demo.
 In order to be able to sign in using Google credentials, an app must be registered through Google Dev Console, using key store that app was signed with. 
 see this SO [answer](https://stackoverflow.com/a/41012703/3903847) for required steps.
 
-###Note 
+### Note 
 This library using [Picasa Web Albums Data API](https://developers.google.com/picasa-web/), as Google stated that [Picasa is retiring](https://developers.google.com/picasa-web/docs/3.0/releasenotes#picasa-is-retiring-february-12-2016), any breaking changes can be happen in the future.
 
 ### License
