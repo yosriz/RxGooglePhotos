@@ -1,8 +1,6 @@
-# Picasa & Google Photos API Client
+# Google Photos Reactive API Client
 
-[![Release](https://img.shields.io/github/release/plusCubed/android-picasa-client.svg?label=JitPack)](https://jitpack.io/#com.pluscubed/android-picasa-client) [![License](https://img.shields.io/github/license/pluscubed/android-picasa-client.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
-
-Not ready for use yet. Watch the repo for updates.
+[![](https://jitpack.io/v/yosriz/RxGooglePhotos.svg)](https://jitpack.io/#yosriz/RxGooglePhotos)
 
 ### Dependency
 
@@ -22,53 +20,53 @@ Add this to your module's `build.gradle` file:
 ```Gradle
 dependencies {
 	...
-	compile 'com.pluscubed:android-picasa-client:{latest-version}'
+    compile 'com.github.yosriz:RxGooglePhotos:{latest-version}'	
 }
 ```
 
-The library is versioned according to [Semantic Versioning](http://semver.org/).
 
-### Basic Usage
-1. `PicasaClient` needs to be attached to the Activity using it, and can be detached when not used anymore. For example:
+### Usage
+
+- construct `GooglePhotosClient` object, and delegate `onActivityResult` event  :
     ```java
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-    	//...
-        PicasaClient.get().attachActivity(this);
-    }
-    
-    @Override
-    protected void onDestroy() {
-        //...
-        PicasaClient.get().detachActivity();
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        googlePhotosClient.onActivityResult(requestCode, resultCode, data);
     }
     ```
     
-2. In `onActivityResult()`, you need to add the following to let the client resolve any error code or process the chosen user account:
+- `GooglePhotosClient` relies on Google Sign-In mechanism to get access to user photos.
+  use `GooglePhotosClient` object to create a service, either sliently (if already signed in), or non-sliently (to display account selection and permission dialogs) :
    ```java
-   @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        //...
-        PicasaClient.get().onActivityResult(requestCode, resultCode, data);
-    }
+   googlePhotosClient.createServiceSilently(activity)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(googlePhotosService -> {
+                    //use googlePhotosService to perform queries
+                }
    ```
     
-3. The client must be initialized. You can do this in one of two ways depending on whether you know the Google account email or not at this point in your app:
+- `createServiceSilently`/`createServiceWithSignIn` methods will return `GooglePhotosService` with proper authorization on success,
+   `GooglePhotosService` is the API gate to perform Google Photos queries.
+   
+- for switching user/sign out, use `GooglePhotosClient.signout()`.  
 
-	2a. Call `pickUserAccount()` and use `onActivityResult()` to observe when initialization is done:
-	```java
-	TODO: sample code
-	```
-	2b. Call `setAccount()` and observe when initialization is done:
-	```java
-	TODO: sample code
-	```
+  
+    
 
-See the sample project for a full demo.
+### Sample
+
+see Sample project for full demo.
+
+### Create Google API OAuth credential
+
+TBD
 
 ### License
 
 ```
+Copyright 2017 Yossi Rizgan
 Copyright 2016 Daniel Ciao
 
 Licensed under the Apache License, Version 2.0 (the "License");
